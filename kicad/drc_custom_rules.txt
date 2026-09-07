@@ -1,0 +1,110 @@
+(version 1)
+
+; ============================================================================
+;  Reglas DRC custom  -  Convertidor Back-to-Back AFE + Inversor
+;  KiCad 8.0 (menu:  Archivo > Config. de la placa > Reglas custom)
+;  Base normativa: IEC 60664-1, IEC 61800-5-1, IPC-2221B (tabla 6-1)
+;
+;  Tension de trabajo:
+;    - Bus DC .......... 800 V DC  (pico de operacion / rating)
+;    - Red AC .......... 400 V RMS L-L  ->  566 V pico
+;    - Cat. sobretension  OVC III  ;  Grado de polucion  PD2 (interior gabinete)
+;    - Con recubrimiento conforme (conformal coating) se puede tratar como PD1
+;
+;  Distancias objetivo (aire = clearance ; superficie = creepage):
+;    HV_DC  <-> HV_DC (funcional) .............. 3.2 mm aire / 4.0 mm fuga
+;    HV_AC  <-> HV_AC (funcional) .............. 3.0 mm aire / 4.0 mm fuga
+;    HV cualquiera <-> BAJA TENSION (reforzado)  8.0 mm aire / 8.0 mm fuga
+;    IO_ISO <-> CTRL/ANA (funcional, anti-ruido) 4.0 mm aire / 4.0 mm fuga
+;    Cobre HV <-> borde de placa .............. 2.0 mm
+; ============================================================================
+
+
+; ---- 1. Alta tension continua: DC+ / DC- / nodos de conmutacion --------------
+(rule "HV_DC_a_HV_DC_clearance"
+	(condition "A.NetClass == 'HV_DC' && B.NetClass == 'HV_DC' && A.Net != B.Net")
+	(constraint clearance (min 3.2mm))
+	(constraint creepage (min 4.0mm)))
+
+; ---- 2. Alta tension de red / salida a motor --------------------------------
+(rule "HV_AC_a_HV_AC_clearance"
+	(condition "A.NetClass == 'HV_AC' && B.NetClass == 'HV_AC' && A.Net != B.Net")
+	(constraint clearance (min 3.0mm))
+	(constraint creepage (min 4.0mm)))
+
+; ---- 3. BARRERA REFORZADA: cualquier HV frente a cualquier baja tension -----
+;      Este es el aislamiento de SEGURIDAD (potencia <-> control / IoT / PE).
+(rule "BARRERA_HV_a_LV_reforzada"
+	(condition "(A.NetClass == 'HV_DC' || A.NetClass == 'HV_AC' || A.NetClass == 'GATE_HS')
+	         && (B.NetClass == 'CTRL' || B.NetClass == 'ANA' || B.NetClass == 'IO_ISO' || B.NetClass == 'PE' || B.NetClass == 'Default')")
+	(constraint clearance (min 8.0mm))
+	(constraint creepage (min 8.0mm)))
+
+; ---- 4. Riel de gate flotante del lado alto: referido a SW_x (HV) -----------
+;      GATE_HS "flota" a potencial de bus; solo puede acercarse a su propio SW.
+(rule "GATE_HS_a_LV"
+	(condition "A.NetClass == 'GATE_HS'
+	         && (B.NetClass == 'CTRL' || B.NetClass == 'ANA' || B.NetClass == 'IO_ISO' || B.NetClass == 'PE')")
+	(constraint clearance (min 8.0mm))
+	(constraint creepage (min 8.0mm)))
+
+; ---- 5. Aislamiento FUNCIONAL control <-> IoT (barrera del ESP32) -----------
+(rule "ISO_CTRL_a_IO"
+	(condition "A.NetClass == 'IO_ISO' && (B.NetClass == 'CTRL' || B.NetClass == 'ANA')")
+	(constraint clearance (min 4.0mm))
+	(constraint creepage (min 4.0mm)))
+
+; ---- 6. Cobre de alta tension al borde de la placa -------------------------
+(rule "HV_a_borde_placa"
+	(condition "A.NetClass == 'HV_DC' || A.NetClass == 'HV_AC' || A.NetClass == 'GATE_HS'")
+	(constraint edge_clearance (min 2.0mm)))
+
+; ---- 7. Ancho minimo de pista para nodos de potencia (ampacidad) ----------
+;      15 kVA -> ~22 A RMS ; en cobre 2 oz (70 um) exterior, dT<=30 C  ->  ~2.5 mm
+(rule "ancho_min_HV_DC"
+	(condition "A.NetClass == 'HV_DC'")
+	(constraint track_width (min 2.0mm) (opt 2.5mm)))
+
+(rule "ancho_min_HV_AC"
+	(condition "A.NetClass == 'HV_AC'")
+	(constraint track_width (min 2.0mm) (opt 2.5mm)))
+
+(rule "ancho_min_PE"
+	(condition "A.NetClass == 'PE'")
+	(constraint track_width (min 1.0mm)))
+
+; ---- 8. Vias en nodos de alta corriente: prohibir via unica --------------
+;      Obliga a poner varias vias en paralelo en DC+/DC- (menos inductancia,
+;      menos resistencia termica).  Ajusta el texto del aviso a tu flujo.
+(rule "aviso_via_HV_DC"
+	(severity warning)
+	(condition "A.NetClass == 'HV_DC' && A.Type == 'Via'")
+	(constraint assertion "A.Via_Diameter >= 1.2mm")
+	(constraint hole_to_hole (min 0.3mm)))
+
+; ---- 9. ZONA DE BARRERA: rectangulo de exclusion bajo los aisladores -----
+;      Dibuja en Pcbnew una "Regla de area" (Rule Area / Keepout) en las capas
+;      internas que cruce toda la placa bajo los opto/aisladores digitales y
+;      transformadores de gate, y nombrala EXACTAMENTE  ISO_BARRIER .
+;      Esta regla prohibe QUE CUALQUIER PISTA de cobre la atraviese.
+(rule "sin_cobre_en_barrera_aislamiento"
+	(condition "A.insideArea('ISO_BARRIER')")
+	(constraint disallow track via zone))
+
+; ---- 10. Ranuras de fuga (slots) ---------------------------------------------
+;      Donde no llegue el creepage, fresa una ranura (capa Edge.Cuts) entre los
+;      dos cobres.  KiCad suma la profundidad de la ranura al camino de fuga.
+;      No hay regla que la genere: se dibuja a mano bajo cada aislador cuyo
+;      creepage de paquete sea < 8 mm.
+
+; ---- 11. Mordaza activa de Miller / lazo de gate: mantener juntas ---------
+;      (informativo)  G_Hx, KELVIN_Hx y CLAMP_Hx deben rutearse como par
+;      apretado, area de lazo < 1 cm2.  Verifica visualmente; no hay
+;      constraint de "area de lazo" en KiCad 8.
+
+; ---- 12. Termales en pads de potencia: radios completos ------------------
+(rule "termales_potencia"
+	(condition "A.NetClass == 'HV_DC' || A.NetClass == 'HV_AC'")
+	(constraint min_resolved_spokes (min 4))
+	(constraint thermal_relief_gap (min 0.3mm))
+	(constraint thermal_spoke_width (min 0.8mm)))

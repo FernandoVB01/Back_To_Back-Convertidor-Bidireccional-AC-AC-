@@ -1,0 +1,11 @@
+* Filtro LCL - barrido AC - corriente de red / tension de convertidor
+Vconv conv 0 AC 1
+L1    conv mid 0.0015
+Rl1   mid  midr 0.025
+Cf    midr cfa 1e-05
+Rd    cfa  0 6.8
+L2    midr out 0.0006
+Rl2   out  0 0.025
+.ac dec 400 10 200k
+.backanno
+.end

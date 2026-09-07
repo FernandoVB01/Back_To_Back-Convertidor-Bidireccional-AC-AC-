@@ -1,0 +1,36 @@
+* Medio puente SiC 1200 V - prueba de doble pulso
+* L_lazo = 20.0 nH   L_gate = 10.0 nH
+* Rg_on = 10.0 ohm   Rg_off = 15 ohm   Vbus = 700.0 V
+Vbus  dcpc 0 700.0
+Cdec  dcpc dcnc 2u
+Rgnd  dcnc 0 1u
+* --- parasita del lazo, repartida entre el rail + y el rail - ---
+Lp    dcpc dcp 10.0n Rser=1m
+Ln    dcn  dcnc 10.0n Rser=1m
+* --- rama superior: apagada, su diodo de cuerpo hace de freewheel ---
+MH    dcp  gh sw sw SiC1200
+* El gate del pasivo NO se sujeta con una fuente ideal: lleva su Rg real,
+* que es lo que permite ver el encendido parasito por Miller.
+Vghs  ghs  sw -4
+Rgh   ghs  gh 15
+* --- rama inferior: la que conmuta ---
+ML    sw   gl kl kl SiC1200
+Lk    kl   dcn 1n Rser=0.5m
+* --- carga: doble pulso, la corriente la construye el primer pulso ---
+Lload dcpc sw 70u Rser=0.05
+* --- driver con Rg partido (encendido lento, apagado rapido) ---
+Vdrv  drv kl PWL(0 -4 100n -4 115n 15 3u 15 3.015u -4 4u -4 4.015u 15
++ 4.6u 15 4.615u -4 8u -4)
+Rgon  drv gm 10.0
+Rgoff drv gm 15
+Dgoff gm drv Dfast
+Lgate gm gl 10.0n Rser=0.2
+.model Dfast D(Ron=0.05 Roff=1meg Vfwd=0.6)
+
+.model SiC1200 VDMOS(Rg=4 Vto=2.6 Kp=22 Lambda=0.002 Cgdmax=1.8n Cgdmin=8p
++ Cgs=1.1n Cjo=0.9n Is=3e-14 Rd=48m Rs=12m Rb=1m mfg=Wolfspeed
++ Vds=1200 Ron=75m Qg=51n)
+
+.tran 0.02n 5.2u 0 0.2n uic
+.backanno
+.end

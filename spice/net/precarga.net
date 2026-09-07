@@ -1,0 +1,8 @@
+* Precarga del bus DC a traves de la resistencia de soft-start
+Vac  ac 0 PULSE(0 565.685424949238 1m 10u 10u 10 20)
+Rpc  ac dcp 68.0
+Cbus dcp 0 0.0006
+Rbld dcp 0 100k
+.tran 0.2m 500m uic
+.backanno
+.end

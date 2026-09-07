@@ -1,0 +1,50 @@
+# ---- resultados de simulacion (se regeneran con run.ps1) ----
+# Los .raw de LTspice pesan decenas de MB cada uno.
+*.raw
+*.op.raw
+*.log
+spice/net/*_run.net
+kicad/sim/*_run.net
+kicad/sim/*.cir
+
+# ---- copias de seguridad y temporales de KiCad ----
+*-backups/
+*.kicad_prl
+*.kicad_pcb-bak
+*.kicad_sch-bak
+*.bak
+fp-info-cache
+~*
+
+# ---- Python ----
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# ---- salidas regenerables ----
+# Se dejan en el repo el PDF de planos y los renders (utiles para revisar),
+# pero no los informes de ERC/DRC ni los netlists intermedios.
+export/erc.rpt
+export/drc.rpt
+kicad/b2b_converter.net
+
+# ---- sistema ----
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ============================================================
+# OTROS PROYECTOS que conviven en esta carpeta.
+# Este repositorio es SOLO el convertidor back-to-back.
+# ============================================================
+/PAPUH/
+/ESP32-Banco-Pruebas/
+/SAT-Manglar-Wokwi/
+/SonarLink/
+/repo-manglar/
+/matlab/
+/simulink/
+/figuras/
+/reporte/
+/CONEXIONES.md
+*.zip

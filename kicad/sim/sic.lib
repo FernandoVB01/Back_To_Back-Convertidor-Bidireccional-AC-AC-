@@ -1,0 +1,6 @@
+* Modelo VDMOS aproximado a un SiC 1200 V / 75 mOhm (TO-247-4).
+* No es el modelo del fabricante: sirve para evaluar el efecto de las
+* parasitas de layout y la forma de onda de conmutacion.
+.model SiC1200 VDMOS(Rg=4 Vto=2.6 Kp=22 Lambda=0.002 Cgdmax=1.8n Cgdmin=8p
++ Cgs=1.1n Cjo=0.9n Is=3e-14 Rd=48m Rs=12m Rb=1m
++ Vds=1200 Ron=75m Qg=51n mfg=Wolfspeed)

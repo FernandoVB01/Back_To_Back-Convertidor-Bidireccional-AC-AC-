@@ -1,0 +1,453 @@
+(kicad_sch
+	(version 20250114)
+	(generator "kisch.py")
+	(generator_version "9.0")
+	(uuid "b52af0d8-8418-47f9-8ecf-45a4427a3843")
+	(paper "A2")
+	(title_block
+		(title "B2B CONVERTER - HOJA RAIZ")
+		(date "2026-09-05")
+		(rev "A")
+		(company "SistemasControl_PAPUH")
+		(comment 1 "15 kVA | 400 VLL 60 Hz | Vdc <= 800 V | fsw 16 kHz")
+		(comment 2 "AFE + Inversor back-to-back | STM32G474 | ESP32-S3")
+		(comment 3 "Generado por tools/gen_schematic.py")
+		(comment 4 "Reglas DRC: kicad/drc_custom_rules.txt")
+	)
+	(lib_symbols)
+	(text "CONVERTIDOR BACK-TO-BACK  (AFE + INVERSOR TRIFASICO)\n\nFlujo de energia:  RED -> [01 LCL] -> [02 AFE] == [03 BUS DC] == [04 INVERSOR] -> MOTOR\nFrenado regenerativo: el AFE devuelve energia a la red; el chopper de [03] es solo respaldo.\nControl [07 STM32] con proteccion por hardware [08]. Telemetria [11 ESP32] tras barrera de aislamiento [10].\n\nLas hojas se conectan por GLOBAL LABELS (DC_P, DC_N, SW_*, G_*, K_*, PWM_*, AIN_*, FAULT_N, ...)."
+		(exclude_from_sim no)
+		(at 25 18 0)
+		(effects
+			(font
+				(size 2.4 2.4)
+			)
+			(justify left top)
+		)
+		(uuid "f0381938-c0c5-46cc-b020-9dc0c10d83d8")
+	)
+	(sheet
+		(at 30 70)
+		(size 150 40)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "b2b00000-0000-4000-8000-0000000000a1")
+		(property "Sheetname" "01_AC_Input_LCL"
+			(at 30 69.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sch/ac_input_lcl.kicad_sch"
+			(at 30 110.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "b2b_converter"
+				(path "/b2b00000-0000-4000-8000-000000000000"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 205 70)
+		(size 150 40)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "b2b00000-0000-4000-8000-0000000000a2")
+		(property "Sheetname" "02_AFE_Bridge"
+			(at 205 69.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sch/afe_bridge.kicad_sch"
+			(at 205 110.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "b2b_converter"
+				(path "/b2b00000-0000-4000-8000-000000000000"
+					(page "3")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 380 70)
+		(size 150 40)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "b2b00000-0000-4000-8000-0000000000a3")
+		(property "Sheetname" "03_DClink_Precharge"
+			(at 380 69.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sch/dclink_precharge.kicad_sch"
+			(at 380 110.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "b2b_converter"
+				(path "/b2b00000-0000-4000-8000-000000000000"
+					(page "4")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 30 132)
+		(size 150 40)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "b2b00000-0000-4000-8000-0000000000a4")
+		(property "Sheetname" "04_Inverter_Bridge"
+			(at 30 131.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sch/inverter_bridge.kicad_sch"
+			(at 30 172.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "b2b_converter"
+				(path "/b2b00000-0000-4000-8000-000000000000"
+					(page "5")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 205 132)
+		(size 150 40)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "b2b00000-0000-4000-8000-0000000000a5")
+		(property "Sheetname" "05_Gate_Drivers"
+			(at 205 131.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sch/gate_driver.kicad_sch"
+			(at 205 172.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "b2b_converter"
+				(path "/b2b00000-0000-4000-8000-000000000000"
+					(page "6")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 380 132)
+		(size 150 40)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "b2b00000-0000-4000-8000-0000000000a6")
+		(property "Sheetname" "06_Sense_I_V"
+			(at 380 131.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sch/sense_iv.kicad_sch"
+			(at 380 172.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "b2b_converter"
+				(path "/b2b00000-0000-4000-8000-000000000000"
+					(page "7")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 30 194)
+		(size 150 40)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "b2b00000-0000-4000-8000-0000000000a7")
+		(property "Sheetname" "07_MCU_STM32"
+			(at 30 193.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sch/mcu_stm32.kicad_sch"
+			(at 30 234.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "b2b_converter"
+				(path "/b2b00000-0000-4000-8000-000000000000"
+					(page "8")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 205 194)
+		(size 150 40)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "b2b00000-0000-4000-8000-0000000000a8")
+		(property "Sheetname" "08_Protection_IO"
+			(at 205 193.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sch/protection_io.kicad_sch"
+			(at 205 234.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "b2b_converter"
+				(path "/b2b00000-0000-4000-8000-000000000000"
+					(page "9")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 380 194)
+		(size 150 40)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "b2b00000-0000-4000-8000-0000000000a9")
+		(property "Sheetname" "09_PSU_Aux_Bias"
+			(at 380 193.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sch/psu_aux.kicad_sch"
+			(at 380 234.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "b2b_converter"
+				(path "/b2b00000-0000-4000-8000-000000000000"
+					(page "10")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 30 256)
+		(size 150 40)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "b2b00000-0000-4000-8000-0000000000aa")
+		(property "Sheetname" "10_Isolation_Comms"
+			(at 30 255.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sch/isolation_comms.kicad_sch"
+			(at 30 296.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "b2b_converter"
+				(path "/b2b00000-0000-4000-8000-000000000000"
+					(page "11")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 205 256)
+		(size 150 40)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "b2b00000-0000-4000-8000-0000000000ab")
+		(property "Sheetname" "11_ESP32_IoT"
+			(at 205 255.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sch/esp32_iot.kicad_sch"
+			(at 205 296.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "b2b_converter"
+				(path "/b2b00000-0000-4000-8000-000000000000"
+					(page "12")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)
