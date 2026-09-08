@@ -16,6 +16,7 @@ import b2b_params as P            # noqa: E402
 import sim_design as D            # noqa: E402
 import sim_timedomain as T        # noqa: E402
 import sim_respuesta as RSP       # noqa: E402
+import sim_svpwm as SVP           # noqa: E402
 
 DOC = os.path.join(ROOT, 'docs', 'INFORME_VALIDACION.md')
 
@@ -46,27 +47,30 @@ def main():
     print(P.resumen())
     print()
 
-    print('[1/6] Filtro LCL ...')
+    print('[1/7] Filtro LCL ...')
     c_lcl = D.analiza_lcl()
 
-    print('[2/6] Lazos de control ...')
+    print('[2/7] Lazos de control ...')
     c_loop, gains = D.analiza_lazos()
 
-    print('[3/6] Termico ...')
+    print('[3/7] Termico ...')
     c_th, th = D.analiza_termico()
     c_th_alt, th_alt = D.analiza_termico(P.RDSON_ALT_25, P.SIC_ALT_NAME)
 
-    print('[4/6] Precarga ...')
+    print('[4/7] Precarga ...')
     c_pc = D.analiza_precarga()
 
-    print('[5/6] Simulacion temporal del convertidor completo ...')
+    print('[5/7] Simulacion temporal del convertidor completo ...')
     rec = T.run()
     c_td = T.evalua(rec)
     T.grafica(rec)
 
-    print('[6/6] Respuesta al escalon, carga transitoria, Nyquist, '
+    print('[6/7] Respuesta al escalon, carga transitoria, Nyquist, '
           'rendimiento, termico y espectro ...')
     c_rsp = RSP.todas()
+
+    print('[7/7] Diagrama de sectores y vectores SVPWM ...')
+    c_svp = SVP.todas()
 
     grupos = [('1. Filtro LCL y calidad de red', c_lcl),
               ('2. Estabilidad de los lazos de control', c_loop),
@@ -74,7 +78,8 @@ def main():
               ('3b. Termico (C3M0040120K, el recomendado)', c_th_alt),
               ('4. Precarga del bus', c_pc),
               ('5. Simulacion temporal + frenado regenerativo', c_td),
-              ('6. Respuesta dinamica, rendimiento y armonicos', c_rsp)]
+              ('6. Respuesta dinamica, rendimiento y armonicos', c_rsp),
+              ('7. Modulacion SVPWM', c_svp)]
 
     total = sum(len(g[1]) for g in grupos)
     fails = [c for _, g in grupos for c in g if not c['ok']]
@@ -130,7 +135,12 @@ def main():
                    ('24_termico_derating.png', 'Temperatura de union vs '
                     'ambiente y curva de derating.'),
                    ('25_espectro_armonicos.png', 'Espectro de la corriente '
-                    'de red contra los limites de IEEE 519.')]:
+                    'de red contra los limites de IEEE 519.'),
+                   ('26_svpwm_hexagono.png', 'SVPWM: hexagono, 6 sectores y '
+                    'los 8 estados. El lugar geometrico lo genera la funcion '
+                    'svpwm() del firmware.'),
+                   ('27_svpwm_patron.png', 'Ciclos de trabajo vs angulo y '
+                    'patron simetrico de 7 segmentos en un periodo.')]:
         body.append('### %s\n' % cap)
         body.append('![%s](../sim/out/%s)\n' % (cap, f))
 

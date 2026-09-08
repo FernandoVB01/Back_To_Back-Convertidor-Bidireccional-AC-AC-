@@ -14,7 +14,7 @@ PUNTO DE DISENO
 
 ## Resultado global
 
-**36 de 36 comprobaciones OK.**
+**38 de 38 comprobaciones OK.**
 
 
 ## 1. Filtro LCL y calidad de red
@@ -95,6 +95,14 @@ PUNTO DE DISENO
 | **OK** | THD con armonicos de baja frecuencia | 1.209 % | 5.000 | IEEE 519 |
 
 
+## 7. Modulacion SVPWM
+
+| | Comprobacion | Valor | Limite | Nota |
+|:-:|---|---:|---:|---|
+| **OK** | SVPWM: error del lugar geometrico en el limite lineal | 5.125e-10 % | 1.000 | debe ser un circulo de radio Vdc/sqrt(3) |
+| **OK** | SVPWM: ganancia sobre SPWM senoidal | 15.470 % | 15.000 | teorico 15.47 % |
+
+
 ## Ganancias resultantes (llevar al firmware)
 
 ```c
@@ -153,3 +161,11 @@ PUNTO DE DISENO
 ### Espectro de la corriente de red contra los limites de IEEE 519.
 
 ![Espectro de la corriente de red contra los limites de IEEE 519.](../sim/out/25_espectro_armonicos.png)
+
+### SVPWM: hexagono, 6 sectores y los 8 estados. El lugar geometrico lo genera la funcion svpwm() del firmware.
+
+![SVPWM: hexagono, 6 sectores y los 8 estados. El lugar geometrico lo genera la funcion svpwm() del firmware.](../sim/out/26_svpwm_hexagono.png)
+
+### Ciclos de trabajo vs angulo y patron simetrico de 7 segmentos en un periodo.
+
+![Ciclos de trabajo vs angulo y patron simetrico de 7 segmentos en un periodo.](../sim/out/27_svpwm_patron.png)
