@@ -14,7 +14,7 @@ PUNTO DE DISENO
 
 ## Resultado global
 
-**31 de 31 comprobaciones OK.**
+**36 de 36 comprobaciones OK.**
 
 
 ## 1. Filtro LCL y calidad de red
@@ -84,6 +84,17 @@ PUNTO DE DISENO
 | **OK** | Error de velocidad en regimen | 9.368e-05 % | 2.000 | 250.0 rad/s de 250 rad/s |
 
 
+## 6. Respuesta dinamica, rendimiento y armonicos
+
+| | Comprobacion | Valor | Limite | Nota |
+|:-:|---|---:|---:|---|
+| **OK** | Sobreimpulso del lazo de corriente | 4.052 % | 20.000 |  |
+| **OK** | Tiempo de establecimiento del bus | 8.862 ms | 50.000 | al 2 % |
+| **OK** | Caida del bus ante escalon de carga (con FF) | 6.326 V | 14.000 | limite 2 % = 14 V |
+| **OK** | Margen de modulo (distancia a -1) | 0.629  | 0.500 | > 0.5 es robusto |
+| **OK** | THD con armonicos de baja frecuencia | 1.209 % | 5.000 | IEEE 519 |
+
+
 ## Ganancias resultantes (llevar al firmware)
 
 ```c
@@ -118,3 +129,27 @@ PUNTO DE DISENO
 ### Prueba del frenado regenerativo: la corriente de red se invierte.
 
 ![Prueba del frenado regenerativo: la corriente de red se invierte.](../sim/out/05_fase_regeneracion.png)
+
+### Respuesta al escalon en lazo cerrado: sobreimpulso y tiempo de establecimiento.
+
+![Respuesta al escalon en lazo cerrado: sobreimpulso y tiempo de establecimiento.](../sim/out/20_respuesta_escalon.png)
+
+### CARGA TRANSITORIA: escalon de 20 % a 100 % y vuelta. Con y sin feedforward.
+
+![CARGA TRANSITORIA: escalon de 20 % a 100 % y vuelta. Con y sin feedforward.](../sim/out/21_escalon_carga.png)
+
+### Nyquist del lazo de corriente con el margen de modulo.
+
+![Nyquist del lazo de corriente con el margen de modulo.](../sim/out/22_nyquist_margenes.png)
+
+### Rendimiento vs carga y desglose de perdidas.
+
+![Rendimiento vs carga y desglose de perdidas.](../sim/out/23_rendimiento_perdidas.png)
+
+### Temperatura de union vs ambiente y curva de derating.
+
+![Temperatura de union vs ambiente y curva de derating.](../sim/out/24_termico_derating.png)
+
+### Espectro de la corriente de red contra los limites de IEEE 519.
+
+![Espectro de la corriente de red contra los limites de IEEE 519.](../sim/out/25_espectro_armonicos.png)

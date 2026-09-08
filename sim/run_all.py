@@ -15,6 +15,7 @@ ROOT = os.path.dirname(HERE)
 import b2b_params as P            # noqa: E402
 import sim_design as D            # noqa: E402
 import sim_timedomain as T        # noqa: E402
+import sim_respuesta as RSP       # noqa: E402
 
 DOC = os.path.join(ROOT, 'docs', 'INFORME_VALIDACION.md')
 
@@ -45,30 +46,35 @@ def main():
     print(P.resumen())
     print()
 
-    print('[1/5] Filtro LCL ...')
+    print('[1/6] Filtro LCL ...')
     c_lcl = D.analiza_lcl()
 
-    print('[2/5] Lazos de control ...')
+    print('[2/6] Lazos de control ...')
     c_loop, gains = D.analiza_lazos()
 
-    print('[3/5] Termico ...')
+    print('[3/6] Termico ...')
     c_th, th = D.analiza_termico()
     c_th_alt, th_alt = D.analiza_termico(P.RDSON_ALT_25, P.SIC_ALT_NAME)
 
-    print('[4/5] Precarga ...')
+    print('[4/6] Precarga ...')
     c_pc = D.analiza_precarga()
 
-    print('[5/5] Simulacion temporal del convertidor completo ...')
+    print('[5/6] Simulacion temporal del convertidor completo ...')
     rec = T.run()
     c_td = T.evalua(rec)
     T.grafica(rec)
+
+    print('[6/6] Respuesta al escalon, carga transitoria, Nyquist, '
+          'rendimiento, termico y espectro ...')
+    c_rsp = RSP.todas()
 
     grupos = [('1. Filtro LCL y calidad de red', c_lcl),
               ('2. Estabilidad de los lazos de control', c_loop),
               ('3. Termico (C3M0075120K, el de la libreria)', c_th),
               ('3b. Termico (C3M0040120K, el recomendado)', c_th_alt),
               ('4. Precarga del bus', c_pc),
-              ('5. Simulacion temporal + frenado regenerativo', c_td)]
+              ('5. Simulacion temporal + frenado regenerativo', c_td),
+              ('6. Respuesta dinamica, rendimiento y armonicos', c_rsp)]
 
     total = sum(len(g[1]) for g in grupos)
     fails = [c for _, g in grupos for c in g if not c['ok']]
@@ -111,7 +117,20 @@ def main():
                    ('04_b2b_temporal.png', 'Simulacion completa: bus, motor, '
                     'flujo de potencia y corriente dq de red.'),
                    ('05_fase_regeneracion.png', 'Prueba del frenado '
-                    'regenerativo: la corriente de red se invierte.')]:
+                    'regenerativo: la corriente de red se invierte.'),
+                   ('20_respuesta_escalon.png', 'Respuesta al escalon en '
+                    'lazo cerrado: sobreimpulso y tiempo de '
+                    'establecimiento.'),
+                   ('21_escalon_carga.png', 'CARGA TRANSITORIA: escalon de '
+                    '20 % a 100 % y vuelta. Con y sin feedforward.'),
+                   ('22_nyquist_margenes.png', 'Nyquist del lazo de '
+                    'corriente con el margen de modulo.'),
+                   ('23_rendimiento_perdidas.png', 'Rendimiento vs carga y '
+                    'desglose de perdidas.'),
+                   ('24_termico_derating.png', 'Temperatura de union vs '
+                    'ambiente y curva de derating.'),
+                   ('25_espectro_armonicos.png', 'Espectro de la corriente '
+                    'de red contra los limites de IEEE 519.')]:
         body.append('### %s\n' % cap)
         body.append('![%s](../sim/out/%s)\n' % (cap, f))
 
