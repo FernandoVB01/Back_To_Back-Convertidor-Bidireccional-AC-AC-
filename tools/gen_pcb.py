@@ -307,7 +307,19 @@ def main():
 
     HVY0, HVY1 = 10.0, 130.0
     LVY0, LVY1 = 160.0, BH - 6
-    # bus DC laminado: DC_P en F.Cu y DC_N en B.Cu, solapados
+    # BUS DC LAMINADO. Es el "ruteo" del lazo de conmutacion: en vez de
+    # tirar pistas, DC_P (F.Cu) y DC_N (B.Cu) se vierten SOLAPADOS sobre
+    # TODA la fila de potencia (AFE + banco + inversor). Los campos de ida
+    # y vuelta se cancelan y la inductancia del lazo se minimiza.
+    # Antes solo cubrian el banco (x 152..234) y los 12 MOSFET, que estan
+    # en x 98..286, quedaban fuera del bus.
+    # NOTA: extender estas zonas sobre toda la fila de potencia (x 92..330)
+    # se probo y EMPEORA el DRC: con 3 mm de clearance exigido a la clase
+    # HV_DC y los pines del TO-247-4 a 2.54 mm, el plano no cabe entre el
+    # drenador y la puerta (293 violaciones de clearance, 34 cortos).
+    # El bus laminado sobre el banco se mantiene; llevar el bus hasta cada
+    # medio puente exige recortes locales alrededor de gate/Kelvin, que es
+    # trabajo de ruteo manual.
     add_zone('DC_P', pcbnew.F_Cu, 152, 14, 234, 126, prio=60)
     add_zone('DC_N', pcbnew.B_Cu, 152, 14, 234, 126, prio=60)
     # Masa de la zona HV en la capa interna 1.  Se vierte en GND porque el

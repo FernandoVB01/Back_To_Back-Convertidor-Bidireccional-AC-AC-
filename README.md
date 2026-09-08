@@ -72,6 +72,8 @@ export/     PDF de los planos, informes de ERC y DRC
 | [docs/INFORME_VALIDACION.md](docs/INFORME_VALIDACION.md) | Las 31 comprobaciones del diseño, con los números |
 | [docs/ESTADO_KICAD.md](docs/ESTADO_KICAD.md) | Qué está hecho en la PCB y qué falta |
 | [docs/BOM_INDUSTRIAL.md](docs/BOM_INDUSTRIAL.md) | Componentes con marca y referencia real |
+| [docs/COMO_SIMULAR.md](docs/COMO_SIMULAR.md) | **Cómo lanzar las 4 simulaciones y qué mirar en cada una** |
+| [docs/RUTEO_ESTADO.md](docs/RUTEO_ESTADO.md) | Estado del ruteo y los bugs que destapó |
 | [docs/SIMULAR_FIRMWARE.md](docs/SIMULAR_FIRMWARE.md) | Por qué Proteus no sirve aquí y qué se hace en su lugar |
 | [docs/00_MASTER_PLAN.md](docs/00_MASTER_PLAN.md) | Arquitectura y las 6 fases del proyecto |
 | [docs/KICAD_PCB_FLOORPLAN.md](docs/KICAD_PCB_FLOORPLAN.md) | Stackup, floorplan y orden de ruteo |
@@ -99,7 +101,8 @@ sobrescribe el generador.
 
 ## Estado
 
-- Esquemático: **227 componentes, 130 redes**, 0 cables sueltos
+- Esquemático: **227 componentes**, 0 cables sueltos. Bus DC corregido:
+  `DC_P` pasó de 4 a **22 pads** (los rieles solo conectaban la última rama)
 - PCB: 340×240 mm, 4 capas, footprints colocados y zonas rellenadas
 - **Ruteo de pistas: 0 %** — ver [docs/RUTEO_ESTADO.md](docs/RUTEO_ESTADO.md): el auto-ruteador propio se descartó por introducir cortocircuitos
 - Validación: **31/31 comprobaciones OK**

@@ -160,6 +160,49 @@ def decouple(sch, ref, val, x, y, net_top, gnd='GND', fp='C0603'):
     return c
 
 
+
+def rail(sch, y, extra_x=(), label=None, rot=180, x0=None, x1=None,
+         xmin=None, xmax=None):
+    """Dibuja un riel horizontal PARTIDO en cada punto donde algo lo toca.
+
+    KiCad solo une cables extremo-con-extremo: un cable que muere en mitad
+    de otro NO conecta, ni poniendo una junction. Por eso el riel no puede
+    ser un unico segmento largo. Esta funcion busca los extremos de cable
+    que ya aterrizan en la altura `y` y construye el riel entre ellos.
+    """
+    from kisch import _find, _findall, Sym
+    xs = set(float(v) for v in extra_x)
+    for it in sch.items:
+        if not (isinstance(it, list) and it and it[0] == Sym('wire')):
+            continue
+        pts = _find(it, Sym('pts'))
+        for c in _findall(pts, Sym('xy')):
+            if abs(float(c[2]) - y) < 1e-6:
+                xs.add(round(float(c[1]), 4))
+    if x0 is not None:
+        xs.add(float(x0))
+    if x1 is not None:
+        xs.add(float(x1))
+    # xmin/xmax acotan el riel: sin ellos se tragaria nodos vecinos que estan
+    # a la misma altura pero son OTRA red (p.ej. DC_RAW antes de la
+    # resistencia de precarga, que quedaria puenteada).
+    if xmin is not None:
+        xs = {x for x in xs if x >= xmin - 1e-6}
+    if xmax is not None:
+        xs = {x for x in xs if x <= xmax + 1e-6}
+    xs = sorted(xs)
+    if len(xs) < 2:
+        return xs
+    for a, b in zip(xs, xs[1:]):
+        sch.wire((a, y), (b, y))
+    for xj in xs[1:-1]:
+        sch.junction((xj, y))
+    if label:
+        px = xs[-1] if rot == 0 else xs[0]
+        sch.glabel(label, (px, y), rot, 'bidirectional')
+    return xs
+
+
 # ============================================================ SHEET 01 - LCL
 
 def sheet01():
@@ -273,17 +316,18 @@ def halfbridge(sch, x, ytop, ybot, qh, ql, swnet, idx, cdec_ref):
                    footprint=FP['SIC'])
     Ql = sch.place(S_SIC, ql, 'C3M0075120K', x, ybot - 26, 0,
                    footprint=FP['SIC'])
-    # drain alto -> DC_P
-    sch.wire_l(Qh.pin('1'), (x, ytop), first='v')
-    sch.junction((x, ytop))
+    # drain alto -> riel DC_P (bajada vertical; el riel se dibuja despues
+    # PARTIDO en estos mismos puntos, ver bridge_sheet)
+    dxh = Qh.pin('1')[0]
+    sch.wire(Qh.pin('1'), (dxh, ytop))
     # source alto -> nodo de conmutacion
     sch.wire_l(Qh.pin('2'), (x, ymid), first='v')
     # drain bajo -> nodo de conmutacion
     sch.wire_l(Ql.pin('1'), (x, ymid), first='v')
     sch.junction((x, ymid))
-    # source bajo -> DC_N
-    sch.wire_l(Ql.pin('2'), (x, ybot), first='v')
-    sch.junction((x, ybot))
+    # source bajo -> riel DC_N (mismo criterio: bajada vertical, T sobre riel)
+    sxl = Ql.pin('2')[0]
+    sch.wire(Ql.pin('2'), (sxl, ybot))
     # salida del nodo
     sch.wire((x, ymid), (x + 22, ymid))
     sch.glabel(swnet, (x + 22, ymid), 0, 'bidirectional')
@@ -298,11 +342,10 @@ def halfbridge(sch, x, ytop, ybot, qh, ql, swnet, idx, cdec_ref):
     # decoupling de lazo de conmutacion
     cx = x - 26
     c, a, b = vcap(sch, cdec_ref, '1uF 1kV', cx, ymid, 'CFILM')
-    sch.wire_l(a, (cx, ytop), first='v')
-    sch.junction((cx, ytop))
-    sch.wire_l(b, (cx, ybot), first='v')
-    sch.junction((cx, ybot))
-    return Qh, Ql
+    sch.wire(a, (a[0], ytop))
+    sch.wire(b, (b[0], ybot))
+    # x donde esta rama toca cada riel
+    return [dxh, a[0]], [sxl, b[0]]
 
 
 def bridge_sheet(idx, title, comments, qbase, gbase, nets, note):
@@ -311,17 +354,28 @@ def bridge_sheet(idx, title, comments, qbase, gbase, nets, note):
     ytop, ybot = 60, 200
     x0 = 90
     dx = 88
-    # rieles DC
-    sch.wire((x0 - 30, ytop), (x0 + 2 * dx, ytop))
-    sch.wire((x0 - 30, ybot), (x0 + 2 * dx, ybot))
-    sch.glabel('DC_P', (x0 - 30, ytop), 180, 'bidirectional')
-    sch.glabel('DC_N', (x0 - 30, ybot), 180, 'bidirectional')
+    xp, xn = [x0 - 30], [x0 - 30]
     for i in range(3):
-        halfbridge(sch, x0 + i * dx, ytop, ybot,
-                   '%s%d' % (qbase, 2 * i + 1), '%s%d' % (qbase, 2 * i + 2),
-                   nets[i], gbase + i, 'CD%s' % nets[i][-1])
+        tp, tn = halfbridge(sch, x0 + i * dx, ytop, ybot,
+                            '%s%d' % (qbase, 2 * i + 1),
+                            '%s%d' % (qbase, 2 * i + 2),
+                            nets[i], gbase + i, 'CD%s' % nets[i][-1])
+        xp += tp
+        xn += tn
         sch.box(x0 + i * dx - 36, ytop - 8, x0 + i * dx + 36, ybot + 8,
                 'RAMA %s' % nets[i][-1], size=2.0)
+
+    # Rieles DC dibujados como segmentos PARTIDOS en cada punto de contacto.
+    # KiCad NO conecta un cable que termina en mitad de otro aunque se ponga
+    # una junction: solo une extremos con extremos. Con el riel de una pieza,
+    # todas las ramas menos la ultima quedaban fuera del bus.
+    for xs, y, nombre in ((sorted(set(xp)), ytop, 'DC_P'),
+                          (sorted(set(xn)), ybot, 'DC_N')):
+        for a, b in zip(xs, xs[1:]):
+            sch.wire((a, y), (b, y))
+        for xj in xs[1:-1]:
+            sch.junction((xj, y))
+        sch.glabel(nombre, (xs[0], y), 180, 'bidirectional')
     sch.text('LAZO DE CONMUTACION: el condensador de 1 uF/1 kV va a menos de\n'
              '10 mm del par de MOSFET. Objetivo L_lazo < 20 nH.',
              (25, 225), size=2.0)
@@ -332,9 +386,12 @@ def sheet02():
     return bridge_sheet(
         1, '02 - Puente AFE (Active Front End)',
         ('6x SiC 1200 V - rectificador activo PWM - fsw 16 kHz',),
-        'Q', 1, ['SW_A', 'SW_B', 'SW_C'],
+        # El nodo de conmutacion del AFE y la salida del LCL son EL MISMO
+        # nodo fisico. Si no se llaman igual, el puente queda desconectado
+        # del filtro (AFE_x colgaba sola en L1x).
+        'Q', 1, ['AFE_A', 'AFE_B', 'AFE_C'],
         'SHEET 02 - PUENTE AFE\n'
-        'Ramas A/B/C. Nodos SW_A/B/C van al filtro LCL (sheet 01, red AFE_x).\n'
+        'Ramas A/B/C. El nodo de conmutacion ES la salida del LCL (AFE_x).\n'
         'Gates G_H1..3 / G_L1..3 y Kelvin K_H1..3 / K_L1..3 al sheet 05.')
 
 
@@ -389,10 +446,6 @@ def sheet03():
 
     ytop, ybot = 70, 190
     xL, xR = 70, 330
-    sch.wire((xL, ytop), (xR, ytop))
-    sch.wire((100, ybot), (xR, ybot))
-    sch.glabel('DC_P', (xR, ytop), 0, 'bidirectional')
-    sch.glabel('DC_N', (xR, ybot), 0, 'bidirectional')
 
     # entrada rectificada desde los diodos de cuerpo del AFE
     sch.glabel('DC_RAW', (40, ytop), 180, 'input')
@@ -401,12 +454,10 @@ def sheet03():
     rpc, a, b = hres(sch, 'RPC', '68R 200W', 60, ytop, 'RPWR')
     sch.wire((52, ytop), a)
     sch.wire(b, (xL, ytop))
-    sch.junction((xL, ytop))
     # contactor de bypass K2
     k2, ka, kb = h2pin(sch, 'Switch:SW_SPST', 'K2', 'BYPASS PRECARGA',
                        60, ytop - 22, 'RELAY')
     sch.wire((52, ytop), (52, ytop - 22))
-    sch.junction((52, ytop))
     sch.wire((52, ytop - 22), ka)
     sch.wire(kb, (xL, ytop - 22))
     sch.wire((xL, ytop - 22), (xL, ytop))
@@ -416,29 +467,24 @@ def sheet03():
     for i in range(4):
         x = 100 + i * 26
         c, a, b = vcap(sch, 'C%d' % (i + 1), '150uF 900V', x, 130, 'CDCLK')
-        sch.wire_l(a, (x, ytop), first='v')
-        sch.junction((x, ytop))
-        sch.wire_l(b, (x, ybot), first='v')
-        sch.junction((x, ybot))
+        sch.wire(a, (a[0], ytop))
+        sch.wire(b, (b[0], ybot))
     sch.box(88, ytop - 6, 214, ybot + 6,
             'BANCO DC-LINK  4x150uF/900V film = 600 uF', size=2.0)
 
     # bleeder + LED bus vivo
     x = 226
     rb, a, b = vres(sch, 'RBLEED', '100k 3W', x, 110, 'RPWR')
-    sch.wire_l(a, (x, ytop), first='v')
-    sch.junction((x, ytop))
+    sch.wire(a, (a[0], ytop))
     rl, la, lb = vres(sch, 'RLED', '220k', x, 145, 'R1206')
     sch.wire(b, la)
     led = sch.place(S_LED, 'D1', 'BUS LIVE', x, 170, 270, footprint=FP['LED0805'])
     sch.wire(lb, led.pin('1'))
-    sch.wire_l(led.pin('2'), (x, ybot), first='v')
-    sch.junction((x, ybot))
+    sch.wire(led.pin('2'), (led.pin('2')[0], ybot))
 
     # divisor de sensado de Vdc
     x = 250
     prev = (x, ytop)
-    sch.junction((x, ytop))
     for i in range(5):
         r, a, b = vres(sch, 'RDV%d' % (i + 1), '200k 0.1%', x, 88 + i * 18,
                        'R1206')
@@ -455,8 +501,7 @@ def sheet03():
     # chopper de frenado
     x = 300
     q = sch.place(S_SIC, 'QBRK', 'C3M0075120K', x, 110, 0, footprint=FP['SIC'])
-    sch.wire_l(q.pin('1'), (x, ytop), first='v')
-    sch.junction((x, ytop))
+    sch.wire(q.pin('1'), (q.pin('1')[0], ytop))
     sch.wire(q.pin('4'), (x - 16, q.pin('4')[1]))
     sch.glabel('G_BRK', (x - 16, q.pin('4')[1]), 180, 'input')
     sch.wire(q.pin('3'), (x + 14, q.pin('3')[1]))
@@ -467,15 +512,18 @@ def sheet03():
     sch.junction((x, 150))
     sch.wire((x, 150), JB.pin('1'))
     sch.wire(JB.pin('2'), (JB.pin('2')[0], ybot))
-    sch.wire((JB.pin('2')[0], ybot), (xR, ybot))
     db = sch.place(S_D, 'DBRK', '1200V SiC', x - 16, 150, 180,
                    footprint=FP['D_TO247'])
     sch.wire(db.pin('1'), (x - 16, ytop))
-    sch.junction((x - 16, ytop))
     sch.wire(db.pin('2'), (x - 16, 150))
     sch.wire((x - 16, 150), (x, 150))
     sch.box(284, ytop - 6, 350, 170,
             'CHOPPER DE FRENADO  (umbral 760-780 V)', size=2.0)
+
+    # Rieles del bus, construidos AL FINAL y partidos en cada punto de
+    # contacto (ver docstring de rail()).
+    rail(sch, ytop, label='DC_P', rot=0, x1=xR, xmin=xL)
+    rail(sch, ybot, label='DC_N', rot=0, x1=xR, xmin=100)
     return sch
 
 

@@ -121,7 +121,46 @@ porque implica descargar y ejecutar software de terceros.
 ruteador de laberinto (A* sobre rejilla) con rip-up, y consultar el motor DRC
 real de KiCad en vez de un modelo de obstáculos propio. Es un proyecto en sí.
 
-## 5. Antes de rutear, conviene arreglar
+## 5. Bugs de conectividad encontrados AL INTENTAR RUTEAR
+
+Intentar rutear los lazos de conmutacion destapo tres errores graves del
+esquematico que ninguna revision visual habia visto:
+
+**a) Los rieles del bus DC solo conectaban la ultima rama.**
+`DC_P` tenia 4 pads cuando debia tener 22. Q1, Q3, Q7 y Q9 estaban
+`unconnected`. Causa: el riel se dibujaba como UN cable largo y los stubs de
+cada rama morian en mitad de el. **KiCad solo une cables extremo con extremo**:
+un cable que termina en medio de otro NO conecta, ni poniendo una junction.
+Solo funcionaba la ultima rama porque coincidia con el extremo del riel.
+Corregido con un helper `rail()` que construye el riel PARTIDO en cada punto
+de contacto.
+
+**b) El puente AFE no estaba conectado al filtro LCL.**
+El nodo de conmutacion se llamaba `SW_A` y la salida del LCL `AFE_A`: son el
+mismo nodo fisico pero con dos nombres, asi que `AFE_A` colgaba sola en `L1A`.
+Unificado a `AFE_A/B/C`.
+
+**c) La resistencia de precarga quedaba puenteada.**
+Al construir los rieles automaticamente, el helper se tragaba tambien el nodo
+`DC_RAW` (antes de `RPC`), poniendo las dos patas de la resistencia en la
+misma red. Corregido acotando el riel con `xmin`.
+
+Resultado: `DC_P` paso de **4 a 22 pads**, `DC_N` de 4 a 18, y las redes
+`unconnected-*` de 110 a 98.
+
+## 6. Se probo extender el bus laminado y NO funciono
+
+Idea: verter `DC_P` (F.Cu) y `DC_N` (B.Cu) solapados sobre TODA la fila de
+potencia, para que el bus llegue a cada medio puente sin pistas.
+
+Resultado: **peor**. 293 violaciones de clearance y 34 cortocircuitos. Con
+3 mm exigidos a la clase `HV_DC` y los pines del TO-247-4 a 2.54 mm, el plano
+no cabe entre el drenador y la puerta del mismo dispositivo.
+
+Llevar el bus hasta cada rama exige **recortes locales** alrededor de
+gate/Kelvin, que es trabajo de ruteo manual en Pcbnew. Se revirtio.
+
+## 7. Antes de rutear, conviene arreglar
 
 1. **`items_not_allowed` (71)**: quedan pads en la franja `ISO_BARRIER`.
    Afinar la colocación de los módulos de bias aislados.
