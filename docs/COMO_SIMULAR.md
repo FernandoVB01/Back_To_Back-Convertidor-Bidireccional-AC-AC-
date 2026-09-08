@@ -58,6 +58,24 @@ Todo sale de `sim/b2b_params.py`. Cambia ahí la potencia, la tensión de red,
 `f_sw`, los valores del LCL… y vuelve a lanzar. Se regeneran también el SPICE,
 el `b2b_config.h` del firmware, el esquemático y el gabinete.
 
+### Lanzar una sola parte
+
+Cada modulo de `sim/` se ejecuta por separado y genera solo sus figuras.
+**Ojo: hay que anteponer `python`** — un `.py` no es un comando de Windows.
+
+```powershell
+python sim2b_params.py      # imprime el punto de diseno y sale
+python sim\sim_design.py      # figuras 01, 02, 03  (LCL, lazos, precarga)
+python sim\sim_timedomain.py  # figuras 04, 05      (convertidor completo)
+python sim\sim_respuesta.py   # figuras 20 a 25     (escalon, Nyquist, termico)
+python sim\sim_svpwm.py       # figuras 26, 27      (hexagono y patron)
+python simun_all.py         # todo + el informe
+```
+
+Escribir solo `sim_design.py` da
+`no se reconoce como un comando interno o externo`: Windows no ejecuta
+scripts de Python directamente.
+
 ---
 
 ## 2. SPICE en LTspice

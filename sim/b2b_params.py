@@ -91,3 +91,7 @@ def resumen():
   LCL: L1 = {L1*1e3:.2f} mH | Cf = {CF*1e6:.1f} uF | Rd = {RD:.1f} ohm | L2 = {L2*1e3:.2f} mH
   SiC: {SIC_NAME} ({RDSON_25*1e3:.0f} mOhm) x {N_SW_TOTAL}
   Motor: PMSM p={P_POLES} lambda={LAMBDA_PM} Wb Kt={KT:.3f} Nm/A J={J_MOT} kg m2"""
+
+
+if __name__ == '__main__':
+    print(resumen())

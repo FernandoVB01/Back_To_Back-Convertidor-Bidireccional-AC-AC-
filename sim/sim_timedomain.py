@@ -353,3 +353,14 @@ def grafica(rec):
     fig.tight_layout()
     fig.savefig(os.path.join(OUT, '05_fase_regeneracion.png'), dpi=130)
     plt.close(fig)
+
+
+if __name__ == '__main__':
+    _rec = run()
+    for _c in evalua(_rec):
+        print('  [%-5s] %-46s %10.4g %s'
+              % ('OK' if _c['ok'] else 'FALLA', _c['name'], _c['value'],
+                 _c['unit']))
+    grafica(_rec)
+    print()
+    print('Figuras 04 y 05 en sim/out/')

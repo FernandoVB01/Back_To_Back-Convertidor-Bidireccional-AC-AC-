@@ -321,3 +321,23 @@ def analiza_precarga():
     fig.savefig(os.path.join(OUT, '03_precarga.png'), dpi=130)
     plt.close(fig)
     return checks
+
+
+def todas():
+    """Ejecuta los cuatro analisis y devuelve todas las comprobaciones."""
+    c = analiza_lcl()
+    c2, _g = analiza_lazos()
+    c += c2
+    c3, _t = analiza_termico()
+    c += c3
+    c += analiza_precarga()
+    return c
+
+
+if __name__ == '__main__':
+    for _c in todas():
+        print('  [%-5s] %-46s %10.4g %s'
+              % ('OK' if _c['ok'] else 'FALLA', _c['name'], _c['value'],
+                 _c['unit']))
+    print()
+    print('Figuras 01, 02 y 03 en sim/out/')

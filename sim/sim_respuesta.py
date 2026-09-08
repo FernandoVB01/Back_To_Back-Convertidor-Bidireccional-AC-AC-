@@ -395,6 +395,7 @@ def espectro():
 
 
 def todas():
+    """Genera las seis figuras y devuelve las comprobaciones."""
     c = []
     c += escalon_lazos()
     c += escalon_carga()
@@ -403,3 +404,12 @@ def todas():
     c += termico()
     c += espectro()
     return c
+
+
+if __name__ == '__main__':
+    for _c in todas():
+        print('  [%-5s] %-46s %10.4g %s'
+              % ('OK' if _c['ok'] else 'FALLA', _c['name'], _c['value'],
+                 _c['unit']))
+    print()
+    print('Figuras 20 a 25 en sim/out/')
