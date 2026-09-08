@@ -33,11 +33,16 @@ La más importante: red → filtro LCL → AFE con PLL → bus DC → inversor c
 ```
 o directamente:
 ```powershell
-python sim\run_all.py
+python sim/b2b_params.py      # punto de diseno, solo imprime
+python sim/sim_design.py      # figuras 01-03 (LCL, lazos, precarga)
+python sim/sim_timedomain.py  # figuras 04-05 (convertidor completo)
+python sim/sim_respuesta.py   # figuras 20-25 (escalon, Nyquist, termico)
+python sim/sim_svpwm.py       # figuras 26-27 (hexagono y patron)
+python sim/run_all.py         # todo + el informe
 ```
 
 **Qué produce**
-- `docs/INFORME_VALIDACION.md` — las 31 comprobaciones con sus números
+- `docs/INFORME_VALIDACION.md` — las 38 comprobaciones con sus números
 - `sim/out/01_lcl_bode.png` — respuesta del filtro LCL
 - `sim/out/02_lazos_bode.png` — Bode de los lazos con el retardo de 1.5·Ts
 - `sim/out/03_precarga.png` — transitorio de precarga e inrush
@@ -50,7 +55,7 @@ python sim\run_all.py
 3. La potencia de red cruzando a **negativo (−11 kW)** → está devolviendo a la red
 4. `Id` cambiando de signo mientras `Iq` sigue en 0 → **factor de potencia unitario**
 
-Debe terminar en **`31/31 OK`**. Si alguna falla, el informe dice cuál y por qué.
+Debe terminar en **`38/38 OK`**. Si alguna falla, el informe dice cuál y por qué.
 
 ### Cambiar el punto de diseño
 
@@ -64,12 +69,12 @@ Cada modulo de `sim/` se ejecuta por separado y genera solo sus figuras.
 **Ojo: hay que anteponer `python`** — un `.py` no es un comando de Windows.
 
 ```powershell
-python sim2b_params.py      # imprime el punto de diseno y sale
-python sim\sim_design.py      # figuras 01, 02, 03  (LCL, lazos, precarga)
-python sim\sim_timedomain.py  # figuras 04, 05      (convertidor completo)
-python sim\sim_respuesta.py   # figuras 20 a 25     (escalon, Nyquist, termico)
-python sim\sim_svpwm.py       # figuras 26, 27      (hexagono y patron)
-python simun_all.py         # todo + el informe
+python sim/b2b_params.py      # punto de diseno, solo imprime
+python sim/sim_design.py      # figuras 01-03 (LCL, lazos, precarga)
+python sim/sim_timedomain.py  # figuras 04-05 (convertidor completo)
+python sim/sim_respuesta.py   # figuras 20-25 (escalon, Nyquist, termico)
+python sim/sim_svpwm.py       # figuras 26-27 (hexagono y patron)
+python sim/run_all.py         # todo + el informe
 ```
 
 Escribir solo `sim_design.py` da
@@ -170,8 +175,12 @@ firmware están sincronizadas con la simulación.
 ```
 o:
 ```powershell
-python fw\config\gen_config.py    # genera b2b_config.h desde b2b_params.py
-python fw\verify\control_ref.py   # ejecuta la transliteración del C
+python sim/b2b_params.py      # punto de diseno, solo imprime
+python sim/sim_design.py      # figuras 01-03 (LCL, lazos, precarga)
+python sim/sim_timedomain.py  # figuras 04-05 (convertidor completo)
+python sim/sim_respuesta.py   # figuras 20-25 (escalon, Nyquist, termico)
+python sim/sim_svpwm.py       # figuras 26-27 (hexagono y patron)
+python sim/run_all.py         # todo + el informe
 ```
 
 **Qué deberías ver**
