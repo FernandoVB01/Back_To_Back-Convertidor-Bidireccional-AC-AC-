@@ -1,6 +1,6 @@
 (kicad_sch
 	(version 20250114)
-	(generator "kisch.py")
+	(generator "eeschema")
 	(generator_version "9.0")
 	(uuid "b2b00000-0000-4000-8000-000000000000")
 	(paper "A2")
@@ -24,18 +24,22 @@
 			)
 			(justify left top)
 		)
-		(uuid "9254d78d-a42a-4a5b-921c-22c14ad24df7")
+		(uuid "d9677925-84ad-42e2-9f1d-0af595cd026e")
 	)
 	(sheet
 		(at 30 70)
 		(size 150 40)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
 			(type solid)
 		)
 		(fill
-			(color 0 0 0 0)
+			(color 0 0 0 0.0000)
 		)
 		(uuid "b2b00000-0000-4000-8000-0000000000a1")
 		(property "Sheetname" "01_AC_Input_LCL"
@@ -67,13 +71,17 @@
 	(sheet
 		(at 205 70)
 		(size 150 40)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
 			(type solid)
 		)
 		(fill
-			(color 0 0 0 0)
+			(color 0 0 0 0.0000)
 		)
 		(uuid "b2b00000-0000-4000-8000-0000000000a2")
 		(property "Sheetname" "02_AFE_Bridge"
@@ -105,13 +113,17 @@
 	(sheet
 		(at 380 70)
 		(size 150 40)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
 			(type solid)
 		)
 		(fill
-			(color 0 0 0 0)
+			(color 0 0 0 0.0000)
 		)
 		(uuid "b2b00000-0000-4000-8000-0000000000a3")
 		(property "Sheetname" "03_DClink_Precharge"
@@ -143,17 +155,21 @@
 	(sheet
 		(at 30 132)
 		(size 150 40)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
 			(type solid)
 		)
 		(fill
-			(color 0 0 0 0)
+			(color 0 0 0 0.0000)
 		)
 		(uuid "b2b00000-0000-4000-8000-0000000000a4")
 		(property "Sheetname" "04_Inverter_Bridge"
-			(at 30 131.3 0)
+			(at 30 131.2884 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -162,7 +178,7 @@
 			)
 		)
 		(property "Sheetfile" "sch/inverter_bridge.kicad_sch"
-			(at 30 172.7 0)
+			(at 30 172.5846 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -181,13 +197,17 @@
 	(sheet
 		(at 205 132)
 		(size 150 40)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
 			(type solid)
 		)
 		(fill
-			(color 0 0 0 0)
+			(color 0 0 0 0.0000)
 		)
 		(uuid "b2b00000-0000-4000-8000-0000000000a5")
 		(property "Sheetname" "05_Gate_Drivers"
@@ -219,13 +239,17 @@
 	(sheet
 		(at 380 132)
 		(size 150 40)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
 			(type solid)
 		)
 		(fill
-			(color 0 0 0 0)
+			(color 0 0 0 0.0000)
 		)
 		(uuid "b2b00000-0000-4000-8000-0000000000a6")
 		(property "Sheetname" "06_Sense_I_V"
@@ -257,13 +281,17 @@
 	(sheet
 		(at 30 194)
 		(size 150 40)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
 			(type solid)
 		)
 		(fill
-			(color 0 0 0 0)
+			(color 0 0 0 0.0000)
 		)
 		(uuid "b2b00000-0000-4000-8000-0000000000a7")
 		(property "Sheetname" "07_MCU_STM32"
@@ -295,13 +323,17 @@
 	(sheet
 		(at 205 194)
 		(size 150 40)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
 			(type solid)
 		)
 		(fill
-			(color 0 0 0 0)
+			(color 0 0 0 0.0000)
 		)
 		(uuid "b2b00000-0000-4000-8000-0000000000a8")
 		(property "Sheetname" "08_Protection_IO"
@@ -333,13 +365,17 @@
 	(sheet
 		(at 380 194)
 		(size 150 40)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
 			(type solid)
 		)
 		(fill
-			(color 0 0 0 0)
+			(color 0 0 0 0.0000)
 		)
 		(uuid "b2b00000-0000-4000-8000-0000000000a9")
 		(property "Sheetname" "09_PSU_Aux_Bias"
@@ -371,13 +407,17 @@
 	(sheet
 		(at 30 256)
 		(size 150 40)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
 			(type solid)
 		)
 		(fill
-			(color 0 0 0 0)
+			(color 0 0 0 0.0000)
 		)
 		(uuid "b2b00000-0000-4000-8000-0000000000aa")
 		(property "Sheetname" "10_Isolation_Comms"
@@ -409,13 +449,17 @@
 	(sheet
 		(at 205 256)
 		(size 150 40)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
 		(fields_autoplaced yes)
 		(stroke
 			(width 0.1524)
 			(type solid)
 		)
 		(fill
-			(color 0 0 0 0)
+			(color 0 0 0 0.0000)
 		)
 		(uuid "b2b00000-0000-4000-8000-0000000000ab")
 		(property "Sheetname" "11_ESP32_IoT"

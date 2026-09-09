@@ -11,6 +11,7 @@ Ejecutar con el Python de KiCad:
     "C:\\Program Files\\KiCad\\9.0\\bin\\python.exe" tools/gen_pcb.py
 """
 
+import io
 import os
 import sys
 import functools
@@ -34,6 +35,16 @@ MARGIN = 8.0
 
 # Regiones del floorplan: hoja -> (x0, y0, x1, y1)  en mm
 # ZONA HV arriba (y 10..126) | BARRERA (y 126..146) | ZONA LV abajo (y 146..222)
+# ------------------------------------------------------------- aspecto
+# Acabado de la placa. KiCad admite: Green, Red, Blue, Purple, Black,
+# White, Yellow. Se guarda en el stackup del .kicad_pcb, asi que manda
+# tanto en el visor 3D como en el render de kicad-cli.
+MASK_COLOR = 'Black'      # mascara de soldadura
+SILK_COLOR = 'White'      # serigrafia
+COPPER_FINISH = 'ENIG'    # oro sobre niquel: obligado con el
+                          # LQFP-100 de paso 0.5 mm
+TPL = os.path.join(HERE, 'stackup_tpl.txt')
+
 BARRIER_Y0, BARRIER_Y1 = 145.0, 151.0   # franja sin cobre (6 mm)
 BARRIER_MID = 148.0                     # los drivers se centran aqui
 
@@ -75,6 +86,29 @@ EXPLICIT['K2'] = (196, 108, 90)
 # aislamiento para llegar al STM32.
 for _i in range(6):
     EXPLICIT['U%d' % (_i + 11)] = (104 + _i * 38, 148.0, 90)
+
+
+def inyecta_stackup(path):
+    """Mete el bloque (stackup ...) dentro de (setup ...) del .kicad_pcb.
+
+    La API de Python no expone BOARD_STACKUP_ITEM, asi que el stackup se
+    inyecta como texto desde tools/stackup_tpl.txt. Ese bloque es lo que
+    fija los espesores reales de cobre (70 um exteriores, 35 um interiores)
+    y el color de mascara y serigrafia.
+    """
+    txt = io.open(path, encoding='utf-8').read()
+    if '(stackup' in txt:
+        return False
+    tpl = io.open(TPL, encoding='utf-8').read()
+    tpl = tpl.replace('@MASK@', MASK_COLOR)
+    tpl = tpl.replace('@SILK@', SILK_COLOR)
+    tpl = tpl.replace('@FINISH@', COPPER_FINISH)
+    i = txt.find('(setup')
+    if i < 0:
+        return False
+    j = txt.index(chr(10), i) + 1
+    io.open(path, 'w', encoding='utf-8').write(txt[:j] + tpl + txt[j:])
+    return True
 
 
 def mm(v):
@@ -369,6 +403,9 @@ def main():
                 zl.append(z)
         pcbnew.ZONE_FILLER(b2).Fill(zl)
         pcbnew.SaveBoard(OUTPCB, b2)
+        if inyecta_stackup(OUTPCB):
+            print('stackup 4 capas: mascara %s, serigrafia %s, %s'
+                  % (MASK_COLOR, SILK_COLOR, COPPER_FINISH))
         filled = sum(1 for z in b2.Zones()
                      if not z.GetIsRuleArea() and not z.IsFilled() is True)
         print('zonas rellenadas: %d' % len(zl))

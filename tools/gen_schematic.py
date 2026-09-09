@@ -90,6 +90,10 @@ S_XTAL = 'Device:Crystal_GND24'
 S_SW = 'Switch:SW_Push'
 S_NT = 'Device:NetTie_2'
 S_LDO = 'Regulator_Linear:TLV75801PDBV'
+S_TVS = 'Device:D_TVS'
+S_ZEN = 'Device:D_Zener'
+S_SCH = 'Device:D_Schottky'
+S_PTC = 'Device:Polyfuse'
 
 SHEETS = [
     ('01_AC_Input_LCL',      'sch/ac_input_lcl.kicad_sch',      'b2b00000-0000-4000-8000-0000000000a1'),
@@ -339,13 +343,41 @@ def halfbridge(sch, x, ytop, ybot, qh, ql, swnet, idx, cdec_ref):
         sch.glabel('G_%s' % tag, (g[0] - 12, g[1]), 180, 'input')
         sch.wire(k, (k[0] + 12, k[1]))
         sch.glabel('K_%s' % tag, (k[0] + 12, k[1]), 0, 'passive')
+    # --- PROTECCION DE PUERTA ---
+    # TVS bidireccional gate-source en CADA SiC. Sin ella, un pico de dv/dt
+    # acoplado por Cgd puede perforar el oxido de puerta: es el modo de
+    # fallo mas comun en SiC. Va fisicamente en el pie del transistor.
+    for Q, tag, ytv in ((Qh, 'H%d' % idx, ytop + 40),
+                        (Ql, 'L%d' % idx, ybot - 12)):
+        tv = sch.place(S_TVS, 'TVG%s' % tag, '+20/-6V', x - 44, ytv, 0,
+                       footprint=FP['D_SOD'])
+        sch.wire(tv.pin('1'), (x - 44, ytv - 12))
+        sch.label('G_%s' % tag, (x - 44, ytv - 12), 90)
+        sch.wire(tv.pin('2'), (x - 44, ytv + 12))
+        sch.label('K_%s' % tag, (x - 44, ytv + 12), 270)
+
+    # --- SNUBBER RC DEL NODO DE CONMUTACION ---
+    # 220 pF + 4.7 ohm: valor que sale del barrido en LTspice. Baja el dv/dt
+    # de 147 a 90 V/ns (por debajo del CMTI de 100 V/ns del UCC21520) y la
+    # sobretension de 823 a 767 V, a costa de 10 W en los 12 dispositivos.
+    sx = x + 40
+    csn, ca, cb = vcap(sch, 'CSN%s' % swnet[-1], '220p 1kV', sx, ymid + 16,
+                       'CFILM')
+    sch.wire((x + 22, ymid), (sx, ymid))
+    sch.junction((x + 22, ymid))
+    sch.wire((sx, ymid), ca)
+    rsn, ra, rb = vres(sch, 'RSN%s' % swnet[-1], '4R7 2W', sx, ymid + 40,
+                       'R2512')
+    sch.wire(cb, ra)
+    sch.wire(rb, (sx, ybot))
+
     # decoupling de lazo de conmutacion
     cx = x - 26
     c, a, b = vcap(sch, cdec_ref, '1uF 1kV', cx, ymid, 'CFILM')
     sch.wire(a, (a[0], ytop))
     sch.wire(b, (b[0], ybot))
     # x donde esta rama toca cada riel
-    return [dxh, a[0]], [sxl, b[0]]
+    return [dxh, a[0]], [sxl, b[0], sx]
 
 
 def bridge_sheet(idx, title, comments, qbase, gbase, nets, note):
@@ -520,6 +552,21 @@ def sheet03():
     sch.box(284, ytop - 6, 350, 170,
             'CHOPPER DE FRENADO  (umbral 760-780 V)', size=2.0)
 
+    # --- PROTECCION DE SOBRETENSION DEL BUS ---
+    # Dos TVS en serie (2 x 440 V) recortan por encima de 880 V. Actuan en
+    # nanosegundos, mucho antes que el chopper (que es un lazo de control) y
+    # antes de que la sobretension llegue a los 1200 V de los SiC.
+    xt = 268
+    tv1 = sch.place(S_TVS, 'TVS1', '5KP440A', xt, 100, 0,
+                    footprint=FP['D_SMA'])
+    tv2 = sch.place(S_TVS, 'TVS2', '5KP440A', xt, 130, 0,
+                    footprint=FP['D_SMA'])
+    sch.wire(tv1.pin('1'), (xt, ytop))
+    sch.wire(tv1.pin('2'), tv2.pin('1'))
+    sch.wire(tv2.pin('2'), (xt, ybot))
+    sch.text('TVS1+TVS2: recorte rapido del bus (~880 V)', (250, 148),
+             size=1.7)
+
     # Rieles del bus, construidos AL FINAL y partidos en cada punto de
     # contacto (ver docstring de rail()).
     rail(sch, ytop, label='DC_P', rot=0, x1=xR, xmin=xL)
@@ -652,8 +699,25 @@ def sense_chain(sch, x, y, name, ref_i, conn_ref):
     sch.junction((b2[0] + 8, out[1]))
     sch.wire((b2[0] + 8, out[1]), ca2)
     sch.power('GND', cb2)
-    sch.wire((b2[0] + 8, out[1]), (b2[0] + 22, out[1]))
-    sch.glabel(name, (b2[0] + 22, out[1]), 0, 'output')
+    # --- RECORTE DE LA ENTRADA DEL ADC ---
+    # Dos Schottky a los rieles. La R serie del filtro limita la corriente;
+    # sin esto, un transitorio de la etapa de potencia entra directo al pin
+    # del STM32 y se lo lleva por delante.
+    xc = b2[0] + 16
+    dh = sch.place(S_SCH, ref_i + 'H', 'BAT54', xc, out[1] - 14, 0,
+                   footprint=FP['D_SOD'])
+    sch.power('+3V3', dh.pin('2'))
+    sch.wire(dh.pin('1'), (xc, out[1]))
+    dl = sch.place(S_SCH, ref_i + 'L', 'BAT54', xc, out[1] + 14, 0,
+                   footprint=FP['D_SOD'])
+    sch.wire(dl.pin('2'), (xc, out[1]))
+    sch.power('GND', dl.pin('1'))
+    # El cable se PARTE en xc: si pasa de largo, los diodos mueren en su
+    # mitad y KiCad no los conecta (solo une extremo con extremo).
+    sch.wire((b2[0] + 8, out[1]), (xc, out[1]))
+    sch.wire((xc, out[1]), (b2[0] + 30, out[1]))
+    sch.junction((xc, out[1]))
+    sch.glabel(name, (b2[0] + 30, out[1]), 0, 'output')
 
 
 def sheet06():
@@ -995,8 +1059,23 @@ def sheet09():
     sch.power('GND', J.pin('2'))
     f, fa, fb = h2pin(sch, S_FUSE, 'F10', '3A', 80, 60, 'FUSE')
     sch.wire(J.pin('1'), fa)
-    sch.wire(fb, (96, 60))
-    sch.label('+24V_F', (96, 60), 0)
+    # --- PROTECCION DE LA ENTRADA AUXILIAR ---
+    # polyfuse rearmable + diodo serie contra inversion de polaridad + TVS
+    # contra transitorios del riel de 24 V (que en un cuadro industrial
+    # comparte cableado con contactores).
+    pf, pa, pb = h2pin(sch, S_PTC, 'PF1', '2A rearmable', 104, 60, 'FUSE')
+    sch.wire(fb, pa)
+    dr = sch.place(S_SCH, 'DREV', 'SS34', 128, 60, 270,
+                   footprint=FP['D_SMA'])
+    sch.wire(pb, dr.pin('1'))
+    sch.wire(dr.pin('2'), (146, 60))
+    sch.label('+24V_F', (146, 60), 0)
+    tvi = sch.place(S_TVS, 'TVS3', 'SMBJ33A', 146, 76, 0,
+                    footprint=FP['D_SMA'])
+    sch.wire((146, 60), tvi.pin('1'))
+    sch.power('GND', tvi.pin('2'))
+    sch.text('PF1 rearmable + DREV antiinversion + TVS3 de transitorios',
+             (72, 92), size=1.7)
     # bulk
     for i, (ref, val, net) in enumerate([('C40', '470u 35V', '+24V'),
                                          ('C41', '220u 25V', '+15V'),
@@ -1202,10 +1281,23 @@ def sheet11():
     # conector de campo
     J = sch.place(S_TB4, 'J60', 'CAMPO / ETHERNET', 430, 170, 0,
                   footprint=FP['TB4'])
+    # --- ESD EN EL CONECTOR DE CAMPO ---
+    # Todo lo que sale del gabinete lleva TVS a IOGND: es la puerta de
+    # entrada tipica de descargas y transitorios de planta.
+    # Cada TVS en SU PROPIA columna: si comparten x, sus bajadas a IOGND se
+    # solapan y cortocircuitan las cuatro lineas de campo entre si.
     for i in range(4):
         pt = J.pin(str(i + 1))
-        sch.wire(pt, (pt[0] - 16, pt[1]))
-        sch.glabel('FIELD_%d' % (i + 1), (pt[0] - 16, pt[1]), 180,
+        cx = pt[0] - 12 - i * 12          # columna propia por linea
+        sch.wire(pt, (cx, pt[1]))
+        sch.junction((cx, pt[1]))
+        tv = sch.place(S_TVS, 'TVF%d' % (i + 1), 'PESD5V0', cx,
+                       pt[1] + 16, 0, footprint=FP['D_SOD'])
+        sch.wire((cx, pt[1]), tv.pin('1'))
+        sch.wire(tv.pin('2'), (cx, pt[1] + 26))
+        sch.glabel('IOGND', (cx, pt[1] + 26), 270, 'input')
+        sch.wire((cx, pt[1]), (cx - 10, pt[1]))
+        sch.glabel('FIELD_%d' % (i + 1), (cx - 10, pt[1]), 180,
                    'bidirectional')
     return sch
 
